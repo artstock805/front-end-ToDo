@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>나의 할 일</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>나의 할 일</h1>
+
+    <form id="add-form" autocomplete="off">
+      <input type="text" id="title-input" placeholder="할 일을 입력하세요" required />
+      <div class="form-row">
+        <label class="field">
+          <span>마감일</span>
+          <input type="date" id="due-input" />
+        </label>
+        <label class="field">
+          <span>태그 (쉼표로 구분)</span>
+          <input type="text" id="tags-input" placeholder="예: 공부, 집안일" />
+        </label>
+        <button type="submit" id="add-btn">추가</button>
+      </div>
+    </form>
+
+    <div class="toolbar">
+      <input type="search" id="search-input" placeholder="검색어를 입력하세요" />
+      <button type="button" id="today-btn" class="chip">오늘 할 일</button>
+    </div>
+
+    <div id="tag-chips" class="tag-chips"></div>
+
+    <ul id="todo-list"></ul>
+    <p id="empty-msg" class="empty" hidden>할 일이 없습니다.</p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

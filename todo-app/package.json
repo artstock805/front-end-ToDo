@@ -1,0 +1,14 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "description": "로컬 SQLite 기반 할 일 앱 (마감일·태그·검색)",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
