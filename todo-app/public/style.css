@@ -18,6 +18,142 @@ h1 {
   margin-bottom: 24px;
 }
 
+/* ── 앱 헤더 (사용자명 · 로그아웃) ── */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.app-header h1 { margin-bottom: 0; }
+
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  border: 1px solid #d5d9e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.logout-btn:hover { background: #f4f5f7; color: #c81e1e; border-color: #f0c3c3; }
+
+/* ── 로그인 / 회원가입 화면 ── */
+.auth-container {
+  max-width: 380px;
+  margin: 8vh auto 0;
+}
+
+.auth-card {
+  background: #fff;
+  border: 1px solid #e2e5ea;
+  border-radius: 14px;
+  padding: 28px 24px;
+  box-shadow: 0 4px 20px rgba(31, 36, 48, 0.06);
+}
+
+.auth-title {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 6px;
+  background: #f4f5f7;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-tab.active {
+  background: #fff;
+  color: #1f2430;
+  box-shadow: 0 1px 3px rgba(31, 36, 48, 0.1);
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.auth-field span {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.auth-field input {
+  padding: 11px 12px;
+  border: 1px solid #d5d9e0;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.auth-field input:focus {
+  outline: none;
+  border-color: #4f6ef7;
+}
+
+.auth-error {
+  background: #fde8e8;
+  color: #c81e1e;
+  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.auth-submit {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #4f6ef7;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-submit:hover { background: #3d5ce5; }
+.auth-submit:disabled { opacity: 0.6; cursor: default; }
+
+.auth-hint {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
 #add-form {
   background: #fff;
   border: 1px solid #e2e5ea;

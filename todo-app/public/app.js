@@ -37,6 +37,11 @@ function googleCalendarUrl(todo) {
 
 async function api(url, options) {
   const res = await fetch(url, options);
+  if (res.status === 401) {
+    // 세션 만료/미로그인 → 로그인 페이지로
+    location.replace('/login.html');
+    throw new Error('로그인이 필요합니다.');
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || '요청에 실패했습니다.');
@@ -198,4 +203,26 @@ todayBtn.addEventListener('click', () => {
   refresh();
 });
 
-refresh();
+// ── 로그아웃 ────────────────────────────────────────────────
+$('#logout-btn').addEventListener('click', async () => {
+  await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  location.replace('/login.html');
+});
+
+// ── 인증 확인 후 초기화 ─────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) {
+      location.replace('/login.html');
+      return;
+    }
+    const { username } = await res.json();
+    $('#user-name').textContent = `👤 ${username}`;
+    refresh();
+  } catch {
+    location.replace('/login.html');
+  }
+}
+
+init();

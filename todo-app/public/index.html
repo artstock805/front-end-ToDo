@@ -8,7 +8,13 @@
 </head>
 <body>
   <main class="container">
-    <h1>나의 할 일</h1>
+    <div class="app-header">
+      <h1>나의 할 일</h1>
+      <div class="user-box">
+        <span id="user-name" class="user-name"></span>
+        <button type="button" id="logout-btn" class="logout-btn">로그아웃</button>
+      </div>
+    </div>
 
     <form id="add-form" autocomplete="off">
       <input type="text" id="title-input" placeholder="할 일을 입력하세요" required />

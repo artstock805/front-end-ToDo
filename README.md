@@ -1,63 +1,41 @@
-# 나의 할 일 (Todo App)
+# 나의 할 일 — AI 연동 Todo 웹 서비스
 
-로컬 SQLite에 저장되는 할 일 관리 앱입니다. 서버를 껐다 켜도 데이터가 유지됩니다.
+로그인 기반 다중 사용자 Todo 웹앱. 기본 할 일 관리에 더해 **Claude(AI)가 MCP·Skill로 직접
+할 일을 관리**하고 **매일 아침 브리핑**(날씨·환율·뉴스·할 일)까지 만들어줍니다.
 
-## 기능
+> 📄 기획 문서: **[PRD.md](PRD.md)** (문제정의·타겟유저·MVP·화면·데이터구조)
+> 📂 앱 코드: **[todo-app/](todo-app/)** — 자세한 실행법은 [todo-app/README.md](todo-app/README.md)
 
-- 할 일 추가 / 목록 보기 / 완료 표시 / 삭제 (기본 CRUD)
-- **마감일** — 지난 항목은 빨간 경고, 오늘 항목은 노란 배지로 표시
-- **태그** — 쉼표로 여러 개 입력, 태그 칩 클릭으로 필터링
-- **검색** — 제목 실시간 검색
-- 오늘 할 일만 보기 필터
-- 구글 캘린더에 추가 버튼 (마감일 있는 항목)
+## 핵심 기능
+
+- **회원가입 / 로그인** — 비밀번호 해시(scrypt) + 세션 쿠키, 사용자별 데이터 분리
+- **할 일 CRUD** — 추가/조회/완료/삭제, 마감일 배지, 태그(N:M), 검색, 오늘 필터
+- **구글 캘린더 추가** — 마감일 있는 할 일을 캘린더에 등록
+
+## 새로운 시도 (확장)
+
+- **MCP 서버** — Claude가 도구 6개로 할 일을 직접 조작 (`add_todo` 등)
+- **Skill 2종** — `todo`(자연어 → 할 일), `daily-briefing`(아침 브리핑)
+- **카카오톡 전송** — 브리핑 요약을 "나에게 보내기"
+- **인터넷 배포** — Cloudflare 터널로 공개 HTTPS URL (SQLite 데이터는 로컬 유지)
 
 ## 기술 스택
 
-| 구분 | 사용 기술 |
-|---|---|
+| 구분 | 기술 |
+|------|------|
+| 프론트엔드 | HTML / CSS / 순수 JavaScript |
 | 백엔드 | Node.js + Express |
-| DB | SQLite (Node.js 22+ 내장 `node:sqlite` — 별도 설치 불필요) |
-| 프론트엔드 | HTML / CSS / 순수 JavaScript (프레임워크 없음) |
-| 설정 | dotenv (`.env`) |
+| DB | SQLite (`node:sqlite`) |
+| 인증 | scrypt 해시 + 세션 쿠키 (외부 의존성 없음) |
+| AI 연동 | MCP + Claude Code Skill |
+| 배포 | Cloudflare 터널 |
 
-전부 무료 도구이며, 비밀값·로컬 설정은 `.env`로 분리되어 있습니다 (저장소에는 `.env.example`만 포함).
-
-## 실행 방법
-
-Node.js 22 이상이 필요합니다.
+## 실행
 
 ```bash
 cd todo-app
 npm install
-cp .env.example .env   # Windows: copy .env.example .env
 npm start
 ```
 
-브라우저에서 http://localhost:3456 접속.
-
-## DB 구조
-
-데이터는 `data/todo.db` 파일 하나에 저장되며, 서버 첫 실행 시 테이블이 자동 생성됩니다.
-
-```
-todos (할 일)          tags (태그)          todo_tags (연결)
-├─ id (PK)            ├─ id (PK)           ├─ todo_id (PK, FK → todos.id)
-├─ title              └─ name (UNIQUE)     └─ tag_id  (PK, FK → tags.id)
-├─ is_done (0/1)
-├─ due_date (nullable)
-└─ created_at
-```
-
-- 할 일 ↔ 태그는 다대다(N:M) 관계로, `todo_tags` 연결 표로 해소
-- 할 일 삭제 시 연결 기록은 `ON DELETE CASCADE`로 자동 삭제
-- `due_date`에 인덱스 적용 (마감일 필터/정렬용)
-
-## API
-
-| 메서드 | 경로 | 설명 |
-|---|---|---|
-| GET | `/api/todos?q=&tag=&filter=today` | 목록 (검색·태그·오늘 필터) |
-| POST | `/api/todos` | 추가 `{ title, due_date?, tags? }` |
-| PATCH | `/api/todos/:id` | 완료 토글 `{ is_done }` |
-| DELETE | `/api/todos/:id` | 삭제 |
-| GET | `/api/tags` | 사용 중인 태그 목록 |
+브라우저에서 http://localhost:3456 → 회원가입 후 사용. (자세한 내용은 [todo-app/README.md](todo-app/README.md))
