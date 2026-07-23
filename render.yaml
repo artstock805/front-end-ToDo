@@ -1,0 +1,13 @@
+# Render 배포 설정 (Blueprint)
+# Render 대시보드 → New → Blueprint → 이 저장소 선택하면 아래대로 자동 구성됩니다.
+services:
+  - type: web
+    name: sehwan-todo
+    runtime: node          # Dockerfile 무시하고 Node 환경으로 빌드
+    rootDir: todo-app      # 앱 코드가 있는 하위 폴더
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
