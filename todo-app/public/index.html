@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>나의 할 일</title>
+  <script>
+    // 렌더 전에 테마 적용 → 깜빡임 방지
+    (function () {
+      try {
+        var t = localStorage.getItem('todo-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -12,6 +22,7 @@
       <h1>나의 할 일</h1>
       <div class="user-box">
         <span id="user-name" class="user-name"></span>
+        <button type="button" id="theme-toggle" class="icon-btn" aria-label="테마 전환">🌙</button>
         <button type="button" id="logout-btn" class="logout-btn">로그아웃</button>
       </div>
     </div>
@@ -52,6 +63,7 @@
     <p id="empty-msg" class="empty" hidden>할 일이 없습니다.</p>
   </main>
 
+  <script src="theme.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
