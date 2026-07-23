@@ -209,6 +209,69 @@ $('#logout-btn').addEventListener('click', async () => {
   location.replace('/login.html');
 });
 
+// ── AI 기능 ─────────────────────────────────────────────────
+const aiInput = $('#ai-input');
+const aiAddBtn = $('#ai-add-btn');
+const aiSummaryBtn = $('#ai-summary-btn');
+const aiSummaryEl = $('#ai-summary');
+
+async function aiAdd() {
+  const text = aiInput.value.trim();
+  if (!text) return;
+  aiAddBtn.disabled = true;
+  aiAddBtn.textContent = '분석 중…';
+  try {
+    const todo = await api('/api/ai/add-todo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    aiInput.value = '';
+    refresh();
+    // 무엇으로 정리됐는지 잠깐 안내
+    aiSummaryEl.hidden = false;
+    const due = todo.due_date ? ` · 마감 ${todo.due_date}` : '';
+    const tags = todo.tags && todo.tags.length ? ` · #${todo.tags.join(' #')}` : '';
+    aiSummaryEl.textContent = `✅ 추가됨: "${todo.title}"${due}${tags}`;
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    aiAddBtn.disabled = false;
+    aiAddBtn.textContent = 'AI로 추가';
+  }
+}
+
+aiAddBtn.addEventListener('click', aiAdd);
+aiInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') aiAdd();
+});
+
+aiSummaryBtn.addEventListener('click', async () => {
+  aiSummaryBtn.disabled = true;
+  aiSummaryEl.hidden = false;
+  aiSummaryEl.textContent = '🤖 AI가 할 일을 정리하는 중…';
+  try {
+    const { summary } = await api('/api/ai/summary', { method: 'POST' });
+    aiSummaryEl.textContent = summary;
+  } catch (e) {
+    aiSummaryEl.textContent = '❌ ' + e.message;
+  } finally {
+    aiSummaryBtn.disabled = false;
+  }
+});
+
+async function setupAI() {
+  try {
+    const { enabled } = await fetch('/api/ai/status').then((r) => r.json());
+    if (enabled) {
+      $('#ai-box').hidden = false;
+      aiSummaryBtn.hidden = false;
+    }
+  } catch {
+    /* AI 상태 확인 실패 시 조용히 무시 */
+  }
+}
+
 // ── 인증 확인 후 초기화 ─────────────────────────────────────
 async function init() {
   try {
@@ -220,6 +283,7 @@ async function init() {
     const { username } = await res.json();
     $('#user-name').textContent = `👤 ${username}`;
     refresh();
+    setupAI();
   } catch {
     location.replace('/login.html');
   }

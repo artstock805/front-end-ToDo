@@ -15,6 +15,7 @@ import {
   requireAuth,
   COOKIE_NAME,
 } from './auth.js';
+import { aiEnabled, parseTodo, summarizeTodos } from './ai.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -44,6 +45,37 @@ function attachTags(todos) {
     byTodo.get(r.todo_id).push(r.name);
   }
   return todos.map((t) => ({ ...t, tags: byTodo.get(t.id) || [] }));
+}
+
+/** 할 일 한 건 생성 (태그 upsert 포함) 후 tags 붙은 객체 반환 */
+function insertTodo(userId, title, due_date, tags) {
+  const info = db
+    .prepare('INSERT INTO todos (title, due_date, user_id) VALUES (?, ?, ?)')
+    .run(title, due_date || null, userId);
+  const todoId = info.lastInsertRowid;
+
+  if (Array.isArray(tags)) {
+    const upsertTag = db.prepare(
+      'INSERT INTO tags (name) VALUES (?) ON CONFLICT(name) DO UPDATE SET name = name RETURNING id'
+    );
+    const link = db.prepare('INSERT OR IGNORE INTO todo_tags (todo_id, tag_id) VALUES (?, ?)');
+    for (const raw of tags) {
+      const name = String(raw).trim();
+      if (!name) continue;
+      const { id: tagId } = upsertTag.get(name);
+      link.run(todoId, tagId);
+    }
+  }
+
+  const todo = db
+    .prepare('SELECT id, title, is_done, due_date, created_at FROM todos WHERE id = ?')
+    .get(todoId);
+  return attachTags([todo])[0];
+}
+
+/** 오늘 날짜 (로컬 기준, YYYY-MM-DD) */
+function todayStr() {
+  return db.prepare("SELECT date('now', 'localtime') AS d").get().d;
 }
 
 // ══ 인증 라우트 ═══════════════════════════════════════════════
@@ -160,29 +192,7 @@ app.post('/api/todos', (req, res) => {
   if (due_date && !/^\d{4}-\d{2}-\d{2}$/.test(due_date)) {
     return res.status(400).json({ error: '마감일 형식이 올바르지 않습니다.' });
   }
-
-  const info = db
-    .prepare('INSERT INTO todos (title, due_date, user_id) VALUES (?, ?, ?)')
-    .run(title.trim(), due_date || null, req.userId);
-  const todoId = info.lastInsertRowid;
-
-  if (Array.isArray(tags)) {
-    const upsertTag = db.prepare(
-      'INSERT INTO tags (name) VALUES (?) ON CONFLICT(name) DO UPDATE SET name = name RETURNING id'
-    );
-    const link = db.prepare('INSERT OR IGNORE INTO todo_tags (todo_id, tag_id) VALUES (?, ?)');
-    for (const raw of tags) {
-      const name = String(raw).trim();
-      if (!name) continue;
-      const { id: tagId } = upsertTag.get(name);
-      link.run(todoId, tagId);
-    }
-  }
-
-  const todo = db
-    .prepare('SELECT id, title, is_done, due_date, created_at FROM todos WHERE id = ?')
-    .get(todoId);
-  res.status(201).json(attachTags([todo])[0]);
+  res.status(201).json(insertTodo(req.userId, title.trim(), due_date, tags));
 });
 
 // 완료 토글: { is_done: 0 | 1 } — 본인 소유만
@@ -222,6 +232,53 @@ app.get('/api/tags', (req, res) => {
     )
     .all(req.userId);
   res.json(rows);
+});
+
+// ══ AI 기능 (Claude API) ═══════════════════════════════════════
+// AI 활성화 여부 (프론트가 버튼 표시 결정)
+app.get('/api/ai/status', (req, res) => {
+  res.json({ enabled: aiEnabled() });
+});
+
+// 자연어 → 할 일 자동 추가
+app.post('/api/ai/add-todo', requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: '내용을 입력해주세요.' });
+    }
+    const parsed = await parseTodo(text.trim(), todayStr());
+    if (!parsed.title) {
+      return res.status(422).json({ error: 'AI가 할 일을 이해하지 못했어요. 다시 입력해보세요.' });
+    }
+    res.status(201).json(insertTodo(req.userId, parsed.title, parsed.due_date, parsed.tags));
+  } catch (e) {
+    res.status(500).json({ error: 'AI 처리 실패: ' + e.message });
+  }
+});
+
+// 할 일 우선순위 AI 정리
+app.post('/api/ai/summary', requireAuth, async (req, res) => {
+  try {
+    const todos = attachTags(
+      db
+        .prepare(
+          `SELECT id, title, is_done, due_date, created_at FROM todos
+           WHERE user_id = ?
+           ORDER BY is_done ASC,
+                    CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC, id DESC`
+        )
+        .all(req.userId)
+    );
+    const pending = todos.filter((t) => !t.is_done);
+    if (pending.length === 0) {
+      return res.json({ summary: '미완료 할 일이 없어요! 🎉 새 할 일을 추가하거나 좀 쉬어도 좋아요.' });
+    }
+    const summary = await summarizeTodos(todos, todayStr());
+    res.json({ summary });
+  } catch (e) {
+    res.status(500).json({ error: 'AI 처리 실패: ' + e.message });
+  }
 });
 
 app.listen(PORT, HOST, () => {

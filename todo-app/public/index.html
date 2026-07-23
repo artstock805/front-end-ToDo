@@ -31,10 +31,20 @@
       </div>
     </form>
 
+    <!-- AI 자연어 추가 (API 키 있을 때만 표시) -->
+    <div id="ai-box" class="ai-box" hidden>
+      <span class="ai-badge">🤖 AI</span>
+      <input type="text" id="ai-input" placeholder="예: 내일까지 팀 회의 자료 준비 — AI가 제목·마감일·태그로 정리해요" />
+      <button type="button" id="ai-add-btn">AI로 추가</button>
+    </div>
+
     <div class="toolbar">
       <input type="search" id="search-input" placeholder="검색어를 입력하세요" />
       <button type="button" id="today-btn" class="chip">오늘 할 일</button>
+      <button type="button" id="ai-summary-btn" class="chip" hidden>🤖 AI 정리</button>
     </div>
+
+    <div id="ai-summary" class="ai-summary" hidden></div>
 
     <div id="tag-chips" class="tag-chips"></div>
 
